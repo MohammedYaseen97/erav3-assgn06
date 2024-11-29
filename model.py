@@ -6,7 +6,7 @@ class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, dropout=0.05):
         super(ConvBlock, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, 3, padding=1)
-        self.bn = nn.BatchNorm2d(out_channels, eps=1e-7)
+        self.bn = nn.BatchNorm2d(out_channels, eps=1e-5, momentum=0.1)
         self.drop = nn.Dropout2d(dropout)
         
     def forward(self, x):
@@ -50,6 +50,21 @@ class Net(nn.Module):
         # Final Layer
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Linear(8, 10)
+
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         x = self.conv1(x)
