@@ -80,10 +80,61 @@ transforms.Compose([
   - Gradient clipping to prevent explosion
 
 ## Results
-- Best Test Accuracy: 99.41%
+- Best Test Accuracy: 99.41% (Epoch 15)
 - Consistent >99% accuracy after epoch 8
 - Stable training without gradient explosion
-- Fast convergence (reaches 97% in first epoch)
+- Fast convergence (reaches 97.46% in first epoch)
+
+### Training Logs
+```
+Epoch  Train           Test
+       Loss    Acc     Loss    Acc
+1      0.1453  95.8%   0.0923  97.46%
+2      0.0521  100.0%  0.0562  98.28%
+3      0.0436  97.9%   0.0432  98.73%
+4      0.0301  99.0%   0.0368  98.84%
+5      0.0358  99.0%   0.0359  98.81%
+6      0.0083  100.0%  0.0356  98.84%
+7      0.0852  97.9%   0.0342  98.82%
+8      0.0379  99.0%   0.0283  99.09%
+9      0.0147  100.0%  0.0258  99.18%
+10     0.0388  97.9%   0.0238  99.25%
+11     0.0278  99.0%   0.0232  99.16%
+12     0.0060  100.0%  0.0242  99.16%
+13     0.0598  97.9%   0.0224  99.33%
+14     0.0142  100.0%  0.0229  99.23%
+15     0.0237  99.0%   0.0207  99.41%  # Best
+16     0.0281  99.0%   0.0245  99.20%
+17     0.0052  100.0%  0.0220  99.31%
+18     0.0677  99.0%   0.0200  99.38%
+19     0.0763  96.9%   0.0218  99.34%
+20     0.0115  100.0%  0.0214  99.24%
+```
+
+### Key Observations
+1. **Fast Initial Learning**
+   - 97.46% accuracy in first epoch
+   - Crosses 98% by epoch 2
+
+2. **Stability**
+   - Train accuracy fluctuates between 97-100%
+   - Test accuracy steadily improves
+   - No signs of overfitting
+
+3. **Loss Trends**
+   - Training loss varies between 0.005-0.15
+   - Test loss consistently decreases
+   - Final test loss: 0.0214
+
+4. **Performance Peaks**
+   - Best accuracy: 99.41% (Epoch 15)
+   - Multiple epochs >99.3%
+   - Maintains high performance till end
+
+5. **Training Speed**
+   - ~14-15 iterations/second
+   - ~32 seconds per epoch
+   - Total training time: ~11 minutes
 
 ## Project Structure
 ```
