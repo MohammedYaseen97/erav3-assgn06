@@ -2,22 +2,22 @@
 
 ![Model Tests](https://github.com/MohammedYaseen97/erav3-assgn06/actions/workflows/model_tests.yml/badge.svg)
 
-A lightweight CNN implementation for MNIST digit classification focusing on efficient architecture design and data augmentation strategies.
+A lightweight CNN implementation for MNIST digit classification focusing on efficient architecture design and stability during training.
 
 ## Architecture Overview
 
-The model achieves >99% test accuracy while maintaining a small parameter footprint through careful architectural choices.
+The model achieves >99.3% test accuracy with careful architectural choices and training strategies.
 
 ### Key Components
 
 #### 1. Convolution Blocks
 Custom `ConvBlock` class combining:
-- 3x3 Convolution
-- Batch Normalization
+- 3x3 Convolution (no padding)
+- Batch Normalization (eps=1e-5, momentum=0.1)
 - ReLU activation
 - Dropout (5%)
 
-#### 2. Transition Blocks
+#### 2. Transition Block
 Custom `TransitionBlock` class for dimensionality reduction:
 - MaxPooling (2x2)
 - 1x1 Convolution for channel reduction
@@ -25,113 +25,90 @@ Custom `TransitionBlock` class for dimensionality reduction:
 
 ### Network Structure
 
-1. **Initial Feature Extraction**
-   - Three ConvBlocks (1→8→16→32 channels)
-   - Maintains spatial dimensions (28x28)
-
-2. **First Transition**
-   - Reduces spatial dimensions: 28x28 → 14x14
-   - Reduces channels: 32 → 4
-
-3. **Mid-Level Features**
-   - Three ConvBlocks (4→8→16→32 channels)
-   - Maintains 14x14 spatial dimensions
-
-4. **Second Transition**
-   - Further reduces dimensions: 14x14 → 7x7
-   - Reduces channels: 32 → 4
-
-5. **Output Block**
-   - Final convolution: 4 → 8 channels
-   - Global Average Pooling
-   - Fully Connected layer: 8 → 10 classes
-
-## Training Strategy
-
-### Data Augmentation
-
 ```
 Input (28x28x1)
 │
 ├── Initial Feature Extraction
-│ ├── ConvBlock: 1 → 8 channels
-│ ├── ConvBlock: 8 → 16 channels
-│ └── ConvBlock: 16 → 32 channels
+│   ├── ConvBlock: 1 → 16 channels (26x26)
+│   ├── ConvBlock: 16 → 16 channels (24x24)
+│   └── ConvBlock: 16 → 32 channels (22x22)
 │
-├── First Transition (28x28 → 14x14)
-│ └── 32 → 4 channels
+├── Transition Block
+│   └── 32 → 8 channels (11x11)
 │
-├── Mid-Level Features
-│ ├── ConvBlock: 4 → 8 channels
-│ ├── ConvBlock: 8 → 16 channels
-│ └── ConvBlock: 16 → 32 channels
-│
-├── Second Transition (14x14 → 7x7)
-│ └── 32 → 4 channels
+├── Feature Processing
+│   ├── ConvBlock: 8 → 16 channels (9x9)
+│   ├── ConvBlock: 16 → 16 channels (7x7)
+│   └── Conv2d: 16 → 32 channels (5x5)
 │
 └── Output Block
-├── Conv: 4 → 8 channels
-├── Global Average Pooling
-└── FC: 8 → 10 classes
+    ├── Global Average Pooling
+    └── FC: 32 → 10 classes
 ```
 
 ## Training Details
 
 ### Data Augmentation
-
 ```python
 transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,)),
-    transforms.RandomRotation(10),
-    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
-    transforms.RandomPerspective(distortion_scale=0.5, p=0.5),
+    transforms.RandomAffine(degrees=0, shear=10)  # Shear by 10 degrees
 ])
 ```
 
-### Hyperparameters
-- **Batch Size:** 64
-- **Optimizer:** SGD
-  - Learning Rate: 0.01
-  - Momentum: 0.9
+### Training Strategy
+- **Batch Size:** 128
+- **Optimizer:** Adam
+  - Learning Rate: 0.001
+  - Betas: (0.9, 0.999)
+  - Epsilon: 1e-8
+- **Gradient Clipping:** max_norm=5.0
+- **Learning Rate Scheduler:** ReduceLROnPlateau
+  - Mode: min
+  - Factor: 0.1
+  - Patience: 2
 - **Epochs:** 20
 
 ## Model Efficiency
-- Total Parameters: <20,000
+- Total Parameters: 16,034
 - Modern Architecture Components:
   - Batch Normalization for training stability
   - Dropout (5%) for regularization
   - Global Average Pooling to reduce parameters
-  - 1x1 convolutions for efficient channel reduction
+  - Progressive reduction in spatial dimensions
+  - Gradient clipping to prevent explosion
+
+## Results
+- Best Test Accuracy: 99.41%
+- Consistent >99% accuracy after epoch 8
+- Stable training without gradient explosion
+- Fast convergence (reaches 97% in first epoch)
 
 ## Project Structure
-
 ```
 .
-├── model.py # Model architecture
-├── tests/ # Model tests
-│ ├── init.py
-│ └── test_model.py
-├── requirements.txt # Dependencies
-└── ERAv3_Session_6.ipynb # Training notebook
+├── model.py                    # Model architecture
+├── tests/                      # Model tests
+│   ├── __init__.py
+│   └── test_model.py          
+├── requirements.txt            # Dependencies
+└── ERAv3_Session_6.ipynb      # Training notebook
 ```
 
 ## Setup and Usage
 
 1. Install dependencies:
-
 ```bash
 pip install -r requirements.txt
 ```
 
 2. Run tests:
-
 ```bash
 pytest tests/test_model.py -v
 ```
 
 3. Train model: Run `ERAv3_Session_6.ipynb`
-
 
 ## Requirements
 - Python 3.8+
