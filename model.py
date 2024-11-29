@@ -6,11 +6,14 @@ class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, dropout=0.05):
         super(ConvBlock, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, 3, padding=1)
-        self.bn = nn.BatchNorm2d(out_channels)
+        self.bn = nn.BatchNorm2d(out_channels, eps=1e-7)
         self.drop = nn.Dropout2d(dropout)
         
     def forward(self, x):
-        return self.drop(self.bn(F.relu(self.conv(x))))
+        x = self.conv(x)
+        x = self.bn(x)
+        x = F.relu(x)
+        return self.drop(x)
 
 class TransitionBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -70,7 +73,8 @@ class Net(nn.Module):
         x = x.view(-1, 8)
         x = self.fc(x)
         
-        return F.log_softmax(x, dim=1)
+        # Use log_softmax with more stable computation
+        return F.log_softmax(x, dim=1).clamp(min=-100)  # Clamp to prevent extreme negative values
 
 if __name__ == "__main__":
     model = Net()
