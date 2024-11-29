@@ -5,15 +5,12 @@ import torch.nn.functional as F
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, dropout=0.05):
         super(ConvBlock, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, 3, padding=1)
+        self.conv = nn.Conv2d(in_channels, out_channels, 3)
         self.bn = nn.BatchNorm2d(out_channels, eps=1e-5, momentum=0.1)
         self.drop = nn.Dropout2d(dropout)
         
     def forward(self, x):
-        x = self.conv(x)
-        x = self.bn(x)
-        x = F.relu(x)
-        return self.drop(x)
+        return self.drop(self.bn(F.relu(self.conv(x))))
 
 class TransitionBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -30,26 +27,20 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         
-        self.conv1 = ConvBlock(1, 8)  # 28x28x1 > 28x28x8
-        self.conv2 = ConvBlock(8, 16)  # 28x28x8 > 28x28x16
-        self.conv3 = ConvBlock(16, 32)  # 28x28x16 > 28x28x32
+        self.conv1 = ConvBlock(1, 8)  # 28x28x1 > 26x26x8
+        self.conv2 = ConvBlock(8, 16) # 26x26x8 > 24x24x16
+        self.conv3 = ConvBlock(16, 32) # 24x24x16 > 22x22x32
         
         # Transition Block 1
-        self.trans1 = TransitionBlock(32, 4)  # 28x28x32 > 14x14x4
+        self.trans1 = TransitionBlock(32, 8)  # 22x22x32 > 11x11x8
         
-        self.conv4 = ConvBlock(4, 8)  # 14x14x4 > 14x14x8
-        self.conv5 = ConvBlock(8, 16)  # 14x14x8 > 14x14x16
-        self.conv6 = ConvBlock(16, 32)  # 14x14x16 > 14x14x32
-
-        # Transition Block 2
-        self.trans2 = TransitionBlock(32, 4)  # 14x14x32 > 7x7x4
-        
-        # Output Block
-        self.conv7 = nn.Conv2d(4, 8, 3, padding=1)  # 7x7x4 > 7x7x8
+        self.conv4 = ConvBlock(8, 8)  # 11x11x8 > 9x9x8
+        self.conv5 = ConvBlock(8, 16)  # 9x9x8 > 7x7x16
+        self.conv6 = nn.Conv2d(16, 32, 3)  # 7x7x16 > 5x5x32
         
         # Final Layer
         self.gap = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Linear(8, 10)
+        self.fc = nn.Linear(32, 10)
 
         self._initialize_weights()
 
@@ -76,16 +67,11 @@ class Net(nn.Module):
         
         x = self.conv4(x)
         x = self.conv5(x)
-        x = self.conv6(x)
-        
-        # Transition 2
-        x = self.trans2(x)
-        
-        x = F.relu(self.conv7(x))
+        x = F.relu(self.conv6(x))
         
         # GAP and FC
         x = self.gap(x)
-        x = x.view(-1, 8)
+        x = x.view(-1, 32) # flatten
         x = self.fc(x)
         
         # Use log_softmax with more stable computation
