@@ -27,15 +27,15 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         
-        self.conv1 = ConvBlock(1, 8)  # 28x28x1 > 26x26x8
-        self.conv2 = ConvBlock(8, 16) # 26x26x8 > 24x24x16
+        self.conv1 = ConvBlock(1, 16)  # 28x28x1 > 26x26x16
+        self.conv2 = ConvBlock(16, 16) # 26x26x16 > 24x24x16
         self.conv3 = ConvBlock(16, 32) # 24x24x16 > 22x22x32
         
         # Transition Block 1
         self.trans1 = TransitionBlock(32, 8)  # 22x22x32 > 11x11x8
         
-        self.conv4 = ConvBlock(8, 8)  # 11x11x8 > 9x9x8
-        self.conv5 = ConvBlock(8, 16)  # 9x9x8 > 7x7x16
+        self.conv4 = ConvBlock(8, 16)  # 11x11x8 > 9x9x16
+        self.conv5 = ConvBlock(16, 16)  # 9x9x16 > 7x7x16
         self.conv6 = nn.Conv2d(16, 32, 3)  # 7x7x16 > 5x5x32
         
         # Final Layer
